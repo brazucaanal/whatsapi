@@ -1,0 +1,5 @@
+{
+  "name": "WHATS API",
+  "description": "Uma plataforma para clientes gerenciarem suas instâncias da Evolution API para WhatsApp de forma simples e segura.",
+  "requestFramePermissions": []
+}

@@ -17,7 +17,7 @@ interface UserProfile {
 }
 
 type AdminTab = 'home' | 'users';
-type UserTab = 'instances' | 'sendMessage' | 'profile';
+type UserTab = 'instances' | 'sendMessage' | 'chat' | 'profile';
 
 type CampaignJobStatus = 'Aguardando' | 'Enviando' | 'Enviado' | 'Falhou';
 interface CampaignJob {
@@ -336,6 +336,23 @@ const SendMessageView: React.FC<{
     );
 };
 
+const ChatView: React.FC = () => (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Caixa de Entrada / Chat</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Acesse suas conversas do WhatsApp aqui. Se for seu primeiro acesso, crie uma conta usando o mesmo e-mail do seu cadastro na WHATS API.
+        </p>
+        <div className="w-full" style={{height: '70vh'}}>
+             <iframe 
+                src="https://projt1-chatwoot.rwezkp.easypanel.host/app/login"
+                title="Chatwoot Inbox"
+                className="w-full h-full border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            ></iframe>
+        </div>
+    </div>
+);
+
 const ProfileView = () => (
     <div className="text-center p-10 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
       <svg className="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -443,6 +460,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 5000);
+  };
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        showToast(`Erro ao sair: ${error.message}`, 'error');
+        console.error('Error signing out:', error);
+    }
   };
 
   // Funções para Usuário
@@ -736,6 +761,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
       switch (userActiveTab) {
         case 'instances': return <UserInstanceView isAutoCreating={isAutoCreating} userInstance={userInstance} handleCreateInstance={handleCreateInstance} loading={loading} handleConnect={handleConnect} handleRestartUserInstance={handleRestartUserInstance} handleOpenAiModal={() => setIsAiModalOpen(true)} handleOpenPaymentsModal={() => setIsPaymentsModalOpen(true)} />;
         case 'sendMessage': return <SendMessageView userInstance={userInstance} setUserActiveTab={setUserActiveTab} showToast={showToast} />;
+        case 'chat': return <ChatView />;
         case 'profile': return <ProfileView />;
         default: return <UserInstanceView isAutoCreating={isAutoCreating} userInstance={userInstance} handleCreateInstance={handleCreateInstance} loading={loading} handleConnect={handleConnect} handleRestartUserInstance={handleRestartUserInstance} handleOpenAiModal={() => setIsAiModalOpen(true)} handleOpenPaymentsModal={() => setIsPaymentsModalOpen(true)} />;
       }
@@ -755,133 +781,118 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
                <svg className="h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-               <span className="text-xl font-bold text-gray-800 dark:text-white">WHATS API {profile?.role === 'admin' && <span className="text-sm font-normal text-blue-500">(Admin)</span>}</span>
+               <span className="text-xl font-bold text-gray-900 dark:text-white">WHATS API</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600 dark:text-gray-400 hidden sm:block">{session.user.email}</span>
-              <button onClick={() => supabase.auth.signOut()} className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
-            </div>
+             <p className="hidden sm:block text-sm text-gray-500 dark:text-gray-400">Logado como: <span className="font-semibold">{session.user.email}</span></p>
+            <button onClick={handleSignOut} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">{renderMainContent()}</main>
+       <div className="flex">
+         <aside className="hidden sm:block sm:w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+           <nav className="p-4 space-y-2">
+            {profile?.role === 'admin' ? (
+              <>
+                <button onClick={() => setAdminActiveTab('home')} className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${adminActiveTab === 'home' ? 'bg-green-100 text-green-700 dark:bg-gray-700 dark:text-green-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                  <span>Visão Geral</span>
+                </button>
+                <button onClick={() => setAdminActiveTab('users')} className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${adminActiveTab === 'users' ? 'bg-green-100 text-green-700 dark:bg-gray-700 dark:text-green-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 004.773-9.805A4 4 0 0012 3C9.239 3 7 5.239 7 8a4 4 0 004.227 3.992" /></svg>
+                  <span>Usuários</span>
+                </button>
+              </>
+            ) : (
+               <>
+                <button onClick={() => setUserActiveTab('instances')} className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${userActiveTab === 'instances' ? 'bg-green-100 text-green-700 dark:bg-gray-700 dark:text-green-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                    <span>Minha Instância</span>
+                </button>
+                <button onClick={() => setUserActiveTab('sendMessage')} className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${userActiveTab === 'sendMessage' ? 'bg-green-100 text-green-700 dark:bg-gray-700 dark:text-green-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+                    <span>Disparos</span>
+                </button>
+                <button onClick={() => setUserActiveTab('chat')} className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${userActiveTab === 'chat' ? 'bg-green-100 text-green-700 dark:bg-gray-700 dark:text-green-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                    <span>Chat</span>
+                </button>
+                <button onClick={() => setUserActiveTab('profile')} className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${userActiveTab === 'profile' ? 'bg-green-100 text-green-700 dark:bg-gray-700 dark:text-green-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                    <span>Perfil</span>
+                </button>
+               </>
+            )}
+           </nav>
+         </aside>
+
+         <main className="flex-1 p-4 sm:p-6 lg:p-8">
+            {renderMainContent()}
+         </main>
+       </div>
+       
+       {profile?.role === 'user' && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 sm:hidden">
+            <div className="flex justify-around items-center h-16">
+                <button onClick={() => setUserActiveTab('instances')} className={`flex flex-col items-center justify-center w-full pt-2 pb-1 text-xs transition-colors ${userActiveTab === 'instances' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                    <span className="mt-1">Instância</span>
+                </button>
+                <button onClick={() => setUserActiveTab('sendMessage')} className={`flex flex-col items-center justify-center w-full pt-2 pb-1 text-xs transition-colors ${userActiveTab === 'sendMessage' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+                    <span className="mt-1">Disparos</span>
+                </button>
+                <button onClick={() => setUserActiveTab('chat')} className={`flex flex-col items-center justify-center w-full pt-2 pb-1 text-xs transition-colors ${userActiveTab === 'chat' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                    <span className="mt-1">Chat</span>
+                </button>
+                <button onClick={() => setUserActiveTab('profile')} className={`flex flex-col items-center justify-center w-full pt-2 pb-1 text-xs transition-colors ${userActiveTab === 'profile' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                    <span className="mt-1">Perfil</span>
+                </button>
+            </div>
+        </div>
+      )}
 
       {isQrModalOpen && (
-        <div id="qr-modal" className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-sm w-full">
-                <h3 className="text-xl font-bold mb-4">Conectar com WhatsApp</h3>
-                {qrError ? (
-                    <div className="p-4 my-4 text-center text-red-700 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-200"><p>{qrError}</p></div>
-                ) : qrCodeDataUrl ? ( 
-                  <div> 
-                    <img src={qrCodeDataUrl} alt="QR Code" className="mx-auto rounded-md" /> 
-                    <div className="mt-4 bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-                        <p className="font-semibold text-gray-800 dark:text-gray-200">O código expira em: <span className="font-bold text-red-500">{qrCountdown}s</span></p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Um novo código será gerado automaticamente.</p>
-                    </div>
-                  </div> 
-                ) : ( 
-                  <div className="flex items-center justify-center p-10">
-                    <svg className="animate-spin h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  </div> 
-                )}
-                <button onClick={handleCloseQrModal} className="mt-6 w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Fechar</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 sm:p-8 text-center max-w-sm w-full mx-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white" id="modal-title">Conectar ao WhatsApp</h3>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Abra o WhatsApp no seu celular e escaneie o código abaixo.</p>
+                <div className="my-6 min-h-[250px] flex items-center justify-center">
+                    {qrCodeDataUrl ? (
+                        <img src={qrCodeDataUrl} alt="QR Code" className="rounded-lg"/>
+                    ) : qrError ? (
+                        <p className="text-red-500">{qrError}</p>
+                    ) : (
+                        <svg className="animate-spin h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    )}
+                </div>
+                {qrCodeDataUrl && <p className="text-sm text-gray-500 dark:text-gray-400">Novo código em: {qrCountdown}s</p>}
+                <button onClick={handleCloseQrModal} type="button" className="mt-6 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                    Fechar
+                </button>
             </div>
         </div>
       )}
 
-      {isAiModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-md w-full animate-fade-in-right">
-                <div className="flex justify-between items-center mb-4">
-                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        <span className="text-purple-500">Recurso Premium</span>: IA
-                     </h3>
-                     <button onClick={() => setIsAiModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                     </button>
+       {(isAiModalOpen || isPaymentsModalOpen) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" aria-labelledby="premium-modal-title" role="dialog" aria-modal="true">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 text-center max-w-md w-full mx-4 transform transition-all" >
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-tr from-purple-500 to-green-400">
+                    <svg className="h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    Integre modelos de IA para automatizar suas conversas e criar chatbots inteligentes. Faça upgrade para desbloquear.
+                <h3 className="mt-5 text-2xl font-bold text-gray-900 dark:text-white" id="premium-modal-title">Recurso Premium</h3>
+                <p className="mt-3 text-gray-600 dark:text-gray-300">
+                    A funcionalidade de {isAiModalOpen ? 'Inteligência Artificial' : 'Integração com Bancos'} estará disponível em breve no nosso plano Premium.
                 </p>
-                <div className="space-y-3 mb-6">
-                    {['OpenAI', 'Google', 'Deepseek', 'Mistral', 'Perplexity', 'Claude'].map(model => (
-                        <div key={model} className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.257-2.262l4.004 7.43a3 3 0 01-5.257 2.262L5.004 5.03A3 3 0 015 5zm0 10a3 3 0 015.257-2.262l4.004 7.43a3 3 0 01-5.257 2.262L5.004 15.03A3 3 0 015 15zm10-5a3 3 0 01-2.262 5.257l-7.43-4.004a3 3 0 012.262-5.257l7.43 4.004A3 3 0 0115 10z" clipRule="evenodd" /></svg>
-                            <span className="ml-3 font-medium text-gray-800 dark:text-gray-200">{model}</span>
-                        </div>
-                    ))}
-                </div>
-                 <div className="flex flex-col sm:flex-row gap-3">
-                    <button disabled className="w-full px-4 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed">Fazer Upgrade</button>
-                    <button onClick={() => setIsAiModalOpen(false)} className="w-full px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Fechar</button>
-                </div>
+                <p className="mt-4 font-semibold text-green-600 dark:text-green-400">Aguarde as novidades!</p>
+                <button onClick={() => { setIsAiModalOpen(false); setIsPaymentsModalOpen(false); }} type="button" className="mt-8 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-6 py-3 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 sm:text-sm">
+                    Entendido
+                </button>
             </div>
         </div>
       )}
-
-      {isPaymentsModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-md w-full animate-fade-in-right">
-                <div className="flex justify-between items-center mb-4">
-                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        <span className="text-blue-500">Recurso Premium</span>: Pagamentos
-                     </h3>
-                     <button onClick={() => setIsPaymentsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                     </button>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    Integre gateways de pagamento para enviar links de cobrança e automatizar seu fluxo financeiro. Faça upgrade para desbloquear.
-                </p>
-                <div className="space-y-3 mb-6">
-                    {['Mercado Pago', 'PagSeguro', 'Nubank'].map(model => (
-                        <div key={model} className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>
-                            <span className="ml-3 font-medium text-gray-800 dark:text-gray-200">{model}</span>
-                        </div>
-                    ))}
-                </div>
-                 <div className="flex flex-col sm:flex-row gap-3">
-                    <button disabled className="w-full px-4 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed">Fazer Upgrade</button>
-                    <button onClick={() => setIsPaymentsModalOpen(false)} className="w-full px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Fechar</button>
-                </div>
-            </div>
-        </div>
-      )}
-
-      <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-2xl rounded-full px-3 py-2 z-40">
-        <div className="flex items-center justify-center space-x-1 sm:space-x-2">
-          {profile?.role === 'admin' ? (
-            <>
-              <button onClick={() => setAdminActiveTab('home')} className={`flex flex-col items-center justify-center text-center w-20 px-2 py-1 rounded-full transition-colors ${adminActiveTab === 'home' ? 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-gray-700' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                <span className="text-xs font-semibold mt-1">Início</span>
-              </button>
-              <button onClick={() => setAdminActiveTab('users')} className={`flex flex-col items-center justify-center text-center w-20 px-2 py-1 rounded-full transition-colors ${adminActiveTab === 'users' ? 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-gray-700' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 006-6v-1a4 4 0 00-4-4H9a4 4 0 00-4 4v1a6 6 0 006 6z" /></svg>
-                <span className="text-xs font-semibold mt-1">Usuários</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => setUserActiveTab('instances')} className={`flex flex-col items-center justify-center text-center w-20 px-2 py-1 rounded-full transition-colors ${userActiveTab === 'instances' ? 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-gray-700' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
-                <span className="text-xs font-semibold mt-1">Instâncias</span>
-              </button>
-              <button onClick={() => setUserActiveTab('sendMessage')} className={`flex flex-col items-center justify-center text-center w-20 px-2 py-1 rounded-full transition-colors ${userActiveTab === 'sendMessage' ? 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-gray-700' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V8z" /></svg>
-                <span className="text-xs font-semibold mt-1">Enviar Msg</span>
-              </button>
-              <button onClick={() => setUserActiveTab('profile')} className={`flex flex-col items-center justify-center text-center w-20 px-2 py-1 rounded-full transition-colors ${userActiveTab === 'profile' ? 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-gray-700' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" /></svg>
-                <span className="text-xs font-semibold mt-1">Perfil</span>
-              </button>
-            </>
-          )}
-        </div>
-      </nav>
     </div>
   );
 };

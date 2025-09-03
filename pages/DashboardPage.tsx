@@ -344,7 +344,7 @@ const ChatView: React.FC = () => (
         </p>
         <div className="w-full" style={{height: '70vh'}}>
              <iframe 
-                src="https://projt1-chatwoot.rwezkp.easypanel.host/app/login"
+                src="https://projt1-chatwoot.rwezkp.easypanel.host"
                 title="Chatwoot Inbox"
                 className="w-full h-full border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900"
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups"

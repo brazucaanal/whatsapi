@@ -18,6 +18,18 @@ export interface ConnectionState {
     status: 'open' | 'close' | 'connecting';
 }
 
+// Interface para a resposta da criação de instância.
+export interface CreateInstanceResponse {
+    hash: {
+        apiKey: string;
+    };
+    instance: {
+        instanceName: string;
+        instanceId: string;
+    };
+}
+
+
 // UTILITIES - Funções "tradutoras" para normalizar os dados da API
 
 /**
@@ -97,8 +109,8 @@ async function makeRequest<T>(endpoint: string, options: RequestInit = {}): Prom
 
 // API FUNCTIONS - Funções que o nosso app chama
 
-export async function createInstance(instanceName: string) {
-    return await makeRequest('/instance/create', {
+export async function createInstance(instanceName: string): Promise<CreateInstanceResponse> {
+    return await makeRequest<CreateInstanceResponse>('/instance/create', {
         method: 'POST',
         body: JSON.stringify({
             instanceName: instanceName,

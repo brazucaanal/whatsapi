@@ -47,6 +47,7 @@ const AuthPage: React.FC = () => {
           password,
         });
         if (error) throw error;
+        
         setMessage('Verifique seu e-mail para o link de confirmação!');
       }
     } catch (err: any) {

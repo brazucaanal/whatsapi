@@ -3,6 +3,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 import * as evolution from '../services/evolutionApi';
 import QRCode from 'qrcode';
+import { triggerUserOnboarding } from '../services/onboardingApi';
 
 // Tipos de dados
 interface DashboardPageProps {
@@ -337,18 +338,45 @@ const SendMessageView: React.FC<{
 };
 
 const ChatView: React.FC = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Caixa de Entrada / Chat</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Acesse suas conversas do WhatsApp aqui. Se for seu primeiro acesso, crie uma conta usando o mesmo e-mail do seu cadastro na WHATS API.
-        </p>
-        <div className="w-full" style={{height: '70vh'}}>
-             <iframe 
-                src="https://projt1-chatwoot.rwezkp.easypanel.host"
-                title="Chatwoot Inbox"
-                className="w-full h-full border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-            ></iframe>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 sm:p-8">
+        <div className="max-w-2xl mx-auto text-center">
+            <svg className="mx-auto h-16 w-16 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+            </svg>
+
+            <h2 className="mt-4 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                Acesse seu chat no celular
+            </h2>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">
+                Para a melhor experiência, gerencie suas conversas através do aplicativo oficial do Chatwoot.
+            </p>
+
+            <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                <a href="https://apps.apple.com/us/app/chatwoot/id1495796682" target="_blank" rel="noopener noreferrer" className="transform hover:scale-105 transition-transform">
+                    <img src="https://www.chatwoot.com/features/mobileapps/app-store.png" alt="Download na App Store" className="h-12 sm:h-14" />
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.chatwoot.app&hl=en" target="_blank" rel="noopener noreferrer" className="transform hover:scale-105 transition-transform">
+                    <img src="https://www.chatwoot.com/features/mobileapps/playstore.png" alt="Disponível no Google Play" className="h-12 sm:h-14" />
+                </a>
+            </div>
+
+            <div className="mt-10 text-left border-t border-gray-200 dark:border-gray-700 pt-8">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Instruções de Configuração:</h3>
+                <ol className="mt-4 space-y-4 list-decimal list-inside text-gray-600 dark:text-gray-400">
+                    <li>
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">Baixe e instale o app</span> da sua loja de aplicativos.
+                    </li>
+                    <li>
+                        Abra o aplicativo e, quando solicitado o <span className="font-semibold text-gray-700 dark:text-gray-300">"Endereço do Servidor"</span> (ou "Installation URL"), insira o seguinte:
+                        <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-700 rounded-md text-center">
+                            <code className="font-mono text-green-600 dark:text-green-400 break-all">https://projt1-chatwoot.rwezkp.easypanel.host</code>
+                        </div>
+                    </li>
+                    <li>
+                       Faça login com o <span className="font-semibold text-gray-700 dark:text-gray-300">mesmo e-mail e senha</span> que você usa para acessar a plataforma WHATS API. Se for seu primeiro acesso ao chat, pode ser necessário criar uma conta dentro do app usando este mesmo e-mail.
+                    </li>
+                </ol>
+            </div>
         </div>
     </div>
 );
@@ -561,7 +589,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
     setError(null);
     const newInstanceName = `inst${session.user.id.replace(/-/g, "").substring(0, 16)}`;
     try {
-        await evolution.createInstance(newInstanceName);
+        const creationResponse = await evolution.createInstance(newInstanceName);
+        const newInstanceId = creationResponse.instance.instanceId;
+
         const { data: updatedProfile, error: updateError } = await supabase
             .from('profiles')
             .update({ instance_name: newInstanceName })
@@ -570,6 +600,18 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
         if (updateError) throw new Error(`Falha ao salvar no banco de dados: ${updateError.message}`);
         if (!updatedProfile) throw new Error("Não foi possível salvar a instância no seu perfil.");
         
+        // Aciona o webhook de onboarding em segundo plano com todos os dados.
+        triggerUserOnboarding({
+            email: session.user.email,
+            id: session.user.id,
+            instanceName: newInstanceName,
+            instanceId: newInstanceId,
+        }).catch(onboardingError => {
+            // Não bloqueia a UI do usuário se o webhook falhar.
+            // Apenas registra o erro no console para depuração.
+            console.error("Falha no processo de onboarding em segundo plano:", onboardingError);
+        });
+
         await new Promise(resolve => setTimeout(resolve, 2000));
         await fetchUserInstance(newInstanceName);
         await showQrCodeForInstance(newInstanceName);
@@ -580,7 +622,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
     } finally {
         setLoading(false);
     }
-  }, [session.user.id, fetchUserInstance, showQrCodeForInstance]);
+  }, [session.user.id, session.user.email, fetchUserInstance, showQrCodeForInstance]);
   
   const bootstrap = useCallback(async () => {
     setLoading(true);

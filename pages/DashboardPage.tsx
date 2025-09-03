@@ -45,7 +45,9 @@ const UserInstanceView: React.FC<{
     loading: boolean;
     handleConnect: () => void;
     handleRestartUserInstance: () => void;
-}> = ({ isAutoCreating, userInstance, handleCreateInstance, loading, handleConnect, handleRestartUserInstance }) => {
+    handleOpenAiModal: () => void;
+    handleOpenPaymentsModal: () => void;
+}> = ({ isAutoCreating, userInstance, handleCreateInstance, loading, handleConnect, handleRestartUserInstance, handleOpenAiModal, handleOpenPaymentsModal }) => {
     if (isAutoCreating) {
        return (
         <div className="text-center p-10">
@@ -60,7 +62,7 @@ const UserInstanceView: React.FC<{
         return (
             <div className="text-center p-10 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Nenhuma instância encontrada</h3>
-                <p className="mt-2 text-gray-500 dark:text-gray-400">Se a criação automática falhar, você pode tentar manualmente.</p>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">Se a criação automática falhar, você pode tentar manually.</p>
                 <button
                     onClick={handleCreateInstance}
                     disabled={loading}
@@ -80,7 +82,7 @@ const UserInstanceView: React.FC<{
                     <div className="mt-2">{renderStatusBadge(userInstance.status)}</div>
                 </div>
                 <div className="flex space-x-2">
-                    {userInstance.status === 'close' && (
+                    {userInstance.status !== 'open' && (
                         <button onClick={handleConnect} className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">Conectar</button>
                     )}
                     <button onClick={handleRestartUserInstance} className="px-4 py-2 text-sm font-medium text-gray-700 bg-yellow-400 rounded-md hover:bg-yellow-500">Reiniciar</button>
@@ -89,6 +91,46 @@ const UserInstanceView: React.FC<{
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg"><p className="font-semibold text-gray-600 dark:text-gray-300">Proprietário (JID):</p><p className="text-gray-800 dark:text-gray-100 break-all">{userInstance.owner || 'Não conectado'}</p></div>
                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg"><p className="font-semibold text-gray-600 dark:text-gray-300">Nome do Perfil:</p><p className="text-gray-800 dark:text-gray-100">{userInstance.profileName || 'N/A'}</p></div>
+            </div>
+
+            <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Seu Plano</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                        <p className="font-semibold text-gray-600 dark:text-gray-300">Plano Atual:</p>
+                        <p className="text-gray-800 dark:text-gray-100 font-bold">Gratuito</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                        <p className="font-semibold text-gray-600 dark:text-gray-300">Limite de Instâncias:</p>
+                        <p className="text-gray-800 dark:text-gray-100 font-bold">1</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Recursos Premium</h3>
+                 <div className="space-y-4">
+                     <button onClick={handleOpenAiModal} className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg shadow-lg hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 group">
+                        <div className="flex items-center">
+                            <svg className="h-7 w-7 opacity-80 group-hover:opacity-100" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                            <span className="font-bold text-lg ml-3">Inteligência Artificial</span>
+                        </div>
+                         <div className="flex items-center bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">
+                            <svg className="h-3 w-3 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                            <span>BLOQUEADO</span>
+                         </div>
+                     </button>
+                      <button onClick={handleOpenPaymentsModal} className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 group">
+                        <div className="flex items-center">
+                            <svg className="h-7 w-7 opacity-80 group-hover:opacity-100" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                            <span className="font-bold text-lg ml-3">Integração com Bancos</span>
+                        </div>
+                         <div className="flex items-center bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">
+                            <svg className="h-3 w-3 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                            <span>BLOQUEADO</span>
+                         </div>
+                     </button>
+                 </div>
             </div>
         </div>
     );
@@ -381,6 +423,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
   // Estado para a visão de Usuário
   const [userInstance, setUserInstance] = useState<evolution.InstanceDetails | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isPaymentsModalOpen, setIsPaymentsModalOpen] = useState(false);
   const [isAutoCreating, setIsAutoCreating] = useState(false);
   const autoCreationTriggered = useRef(false);
 
@@ -690,10 +734,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
       );
     } else {
       switch (userActiveTab) {
-        case 'instances': return <UserInstanceView isAutoCreating={isAutoCreating} userInstance={userInstance} handleCreateInstance={handleCreateInstance} loading={loading} handleConnect={handleConnect} handleRestartUserInstance={handleRestartUserInstance} />;
+        case 'instances': return <UserInstanceView isAutoCreating={isAutoCreating} userInstance={userInstance} handleCreateInstance={handleCreateInstance} loading={loading} handleConnect={handleConnect} handleRestartUserInstance={handleRestartUserInstance} handleOpenAiModal={() => setIsAiModalOpen(true)} handleOpenPaymentsModal={() => setIsPaymentsModalOpen(true)} />;
         case 'sendMessage': return <SendMessageView userInstance={userInstance} setUserActiveTab={setUserActiveTab} showToast={showToast} />;
         case 'profile': return <ProfileView />;
-        default: return <UserInstanceView isAutoCreating={isAutoCreating} userInstance={userInstance} handleCreateInstance={handleCreateInstance} loading={loading} handleConnect={handleConnect} handleRestartUserInstance={handleRestartUserInstance} />;
+        default: return <UserInstanceView isAutoCreating={isAutoCreating} userInstance={userInstance} handleCreateInstance={handleCreateInstance} loading={loading} handleConnect={handleConnect} handleRestartUserInstance={handleRestartUserInstance} handleOpenAiModal={() => setIsAiModalOpen(true)} handleOpenPaymentsModal={() => setIsPaymentsModalOpen(true)} />;
       }
     }
   };
@@ -743,6 +787,66 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
                   </div> 
                 )}
                 <button onClick={handleCloseQrModal} className="mt-6 w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Fechar</button>
+            </div>
+        </div>
+      )}
+
+      {isAiModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-md w-full animate-fade-in-right">
+                <div className="flex justify-between items-center mb-4">
+                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <span className="text-purple-500">Recurso Premium</span>: IA
+                     </h3>
+                     <button onClick={() => setIsAiModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                     </button>
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    Integre modelos de IA para automatizar suas conversas e criar chatbots inteligentes. Faça upgrade para desbloquear.
+                </p>
+                <div className="space-y-3 mb-6">
+                    {['OpenAI', 'Google', 'Deepseek', 'Mistral', 'Perplexity', 'Claude'].map(model => (
+                        <div key={model} className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.257-2.262l4.004 7.43a3 3 0 01-5.257 2.262L5.004 5.03A3 3 0 015 5zm0 10a3 3 0 015.257-2.262l4.004 7.43a3 3 0 01-5.257 2.262L5.004 15.03A3 3 0 015 15zm10-5a3 3 0 01-2.262 5.257l-7.43-4.004a3 3 0 012.262-5.257l7.43 4.004A3 3 0 0115 10z" clipRule="evenodd" /></svg>
+                            <span className="ml-3 font-medium text-gray-800 dark:text-gray-200">{model}</span>
+                        </div>
+                    ))}
+                </div>
+                 <div className="flex flex-col sm:flex-row gap-3">
+                    <button disabled className="w-full px-4 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed">Fazer Upgrade</button>
+                    <button onClick={() => setIsAiModalOpen(false)} className="w-full px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Fechar</button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {isPaymentsModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-md w-full animate-fade-in-right">
+                <div className="flex justify-between items-center mb-4">
+                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <span className="text-blue-500">Recurso Premium</span>: Pagamentos
+                     </h3>
+                     <button onClick={() => setIsPaymentsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                     </button>
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    Integre gateways de pagamento para enviar links de cobrança e automatizar seu fluxo financeiro. Faça upgrade para desbloquear.
+                </p>
+                <div className="space-y-3 mb-6">
+                    {['Mercado Pago', 'PagSeguro', 'Nubank'].map(model => (
+                        <div key={model} className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>
+                            <span className="ml-3 font-medium text-gray-800 dark:text-gray-200">{model}</span>
+                        </div>
+                    ))}
+                </div>
+                 <div className="flex flex-col sm:flex-row gap-3">
+                    <button disabled className="w-full px-4 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed">Fazer Upgrade</button>
+                    <button onClick={() => setIsPaymentsModalOpen(false)} className="w-full px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Fechar</button>
+                </div>
             </div>
         </div>
       )}

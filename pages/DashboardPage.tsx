@@ -373,7 +373,7 @@ const ChatView: React.FC = () => (
                         </div>
                     </li>
                     <li>
-                       Faça login com o <span className="font-semibold text-gray-700 dark:text-gray-300">mesmo e-mail e senha</span> que você usa para acessar a plataforma WHATS API. Se for seu primeiro acesso ao chat, pode ser necessário criar uma conta dentro do app usando este mesmo e-mail.
+                       Faça login com o <span className="font-semibold text-gray-700 dark:text-gray-300">mesmo e-mail e senha padrão $enhaA2025 </span> que você usa para acessar a plataforma WHATS API. Se for seu primeiro acesso ao chat, pode ser necessário criar uma conta dentro do app usando este mesmo e-mail .
                     </li>
                 </ol>
             </div>

@@ -695,23 +695,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
     setLoading(true);
     setError(null);
     try {
-      const { data: usersData, error: usersError } = await supabase.rpc('get_all_users_with_profiles');
-      if (usersError) throw usersError;
-      
-      const mappedUsers: UserProfile[] = usersData.map((u: any) => ({
-        id: u.id,
-        role: u.role,
-        instance_name: u.instance_name,
-        user_details: { id: u.id, email: u.email },
-      }));
+      // Chama a função segura no banco de dados.
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_all_user_profiles');
 
+      if (rpcError) throw rpcError;
+
+      // Mapeia o resultado plano da função para a estrutura aninhada que o componente espera.
+      const mappedUsers: UserProfile[] = rpcData.map((user: any) => ({
+        id: user.id,
+        role: user.role,
+        instance_name: user.instance_name,
+        user_details: { email: user.email }
+      }));
+      
       const instances = await evolution.fetchAllInstances();
       
       setAllInstances(instances);
       setAllUsers(mappedUsers);
-    } catch (err: any)
- {
-      setError(err.message);
+    } catch (err: any) {
+       setError(`Erro ao carregar dados do admin: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -770,7 +772,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ session }) => {
 
   const renderMainContent = () => {
     if (loading && !isAutoCreating) return <div className="text-center p-10"><svg className="animate-spin h-8 w-8 text-green-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p className="mt-4 text-gray-500">Carregando dados...</p></div>;
-    if (error) return <div className="p-4 text-center text-red-600 bg-red-100 rounded-lg">{error}</div>;
+    if (error) return <div className="p-4 text-center text-red-600 bg-red-100 dark:bg-red-900/50 dark:text-red-300 rounded-lg">{error}</div>;
     if (!profile) return <div className="p-4 text-center text-red-600 bg-red-100 rounded-lg">Não foi possível carregar seu perfil.</div>;
 
     if (profile.role === 'admin') {

@@ -1,8 +1,7 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://lozukfadhkyagimlxhle.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvenVrZmFkaGt5YWdpbWx4aGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1OTQ0OTksImV4cCI6MjA3MjE3MDQ5OX0.ngQf4pRn94JH5EwmPdSQwH7i3CrVafZ_OA8D0914doM';
+const supabaseUrl = 'https://dqzsokbvbversmzemenz.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxenNva2J2YnZlcnNtemVtZW56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MDEyNTQsImV4cCI6MjA3NjI3NzI1NH0.Gbp3WcVEzasgxRPVOlAJYmhJvWx60PEQWiEVG1iAonE';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase URL and Anon Key must be provided.');

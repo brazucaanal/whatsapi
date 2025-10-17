@@ -56,6 +56,7 @@ const HomePage: React.FC<{ onNavigateToAuth: () => void }> = ({ onNavigateToAuth
                         </div>
                         <div className="mt-16 grid gap-10 md:grid-cols-2 lg:grid-cols-3">
                             <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                                {/* FIX: Provided SVG icon as a child to the FeatureIcon component to resolve the missing 'children' prop error. */}
                                 <FeatureIcon>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V8z" /></svg>
                                 </FeatureIcon>
@@ -63,6 +64,7 @@ const HomePage: React.FC<{ onNavigateToAuth: () => void }> = ({ onNavigateToAuth
                                 <p className="mt-2 text-gray-500 dark:text-gray-400">Envie mensagens para sua lista de contatos com intervalos configuráveis e acompanhamento em tempo real.</p>
                             </div>
                             <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                                {/* FIX: Provided SVG icon as a child to the FeatureIcon component to resolve the missing 'children' prop error. */}
                                 <FeatureIcon>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
                                 </FeatureIcon>
@@ -70,6 +72,7 @@ const HomePage: React.FC<{ onNavigateToAuth: () => void }> = ({ onNavigateToAuth
                                 <p className="mt-2 text-gray-500 dark:text-gray-400">Conecte modelos como OpenAI e Google para criar chatbots e automatizar respostas inteligentes.</p>
                             </div>
                             <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                                {/* FIX: Provided SVG icon as a child to the FeatureIcon component to resolve the missing 'children' prop error. */}
                                 <FeatureIcon>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                                 </FeatureIcon>
